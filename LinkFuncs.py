@@ -1,5 +1,6 @@
 import pycurl
 import urllib2
+import requests
 from StringIO import StringIO
 
 
@@ -9,7 +10,6 @@ def GetThread():
     buffer = StringIO()
     c = pycurl.Curl()
     sSearch = "sharethread"
-    sSearch2 = "share thread"
     c.setopt(c.URL, 'http://boards.4chan.org/mu/catalog')
     c.setopt(c.WRITEDATA, buffer)
     c.perform()
@@ -39,6 +39,15 @@ def GetThread():
     sPostID = sSub2[3:-2]
 
     thread = "http://boards.4chan.org/mu/thread/"+ sPostID # We now have the actual sharethread
+
+
+    try:
+        r = requests.head("http://stackoverflow.com")
+        print(r.status_code)
+    except requests.ConnectionError:
+        print("No sharethread or wrong ID")
+        thread = 404
+
     return thread
 
 
@@ -62,6 +71,8 @@ def GetLinks( thread ):
     index2 = (page.find("mega"))
     pageWork = page # Make a copy of the HTML to adjust in the loop
     lengthAdjusted = 0
+    if index2 < 0:
+        return "no links, possibly grabbed wrong thread"
 
     GoodLinks = []
     BadLinks = []
