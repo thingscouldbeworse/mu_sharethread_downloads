@@ -5,5 +5,6 @@ thread = GetThread()
 print thread
 if thread != "404":
     links = GetLinks(thread)
-    print links
+    for link in links:
+        print link
 

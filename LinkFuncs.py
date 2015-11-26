@@ -23,20 +23,27 @@ def GetThread():
     if  sSearch in page:
         bShare = True
         index = page.find(sSearch, 0, len(page))
-    elif sSearch2 in page:
-        bShare = True
-        index = page.find(sSearch2, 0, len(page))
     else:
         print( "ERROR: No sharethread found. Try later today?")
 
     # We now have an index located, we need to grab the thread number associated with this link
-    sSub = page[index-500:index]
+    # The ID is behind the word "sharethread". There's probably a better way to search for it but oh well...
+    sSub = page[::-1] # Reverse page so we can count forward to find the stuff behind
+    sSearchReverse = sSearch[::-1] # Reverse our search string to go looking for its index
+    index = sSub.find(sSearchReverse)
+    sSub = sSub[index:]
 
-    sIndexOpenBracket = sSub.find("{")
-    sIndexCloseBracket = sSub.find("}")
-    sSub2 = sSub[sIndexCloseBracket:sIndexOpenBracket] # The postID is actually in between the reversed open and close bracket because it's in between two identities
+    indexFirst = sSub.find("{")  # Find the first open bracket after the "sharethread" index
+    sSub = sSub[indexFirst+1:]
+    indexFirst = sSub.find("{")  # The next open bracket is the first bookend
+    indexSecond = sSub.find("}") # The closed bracket bookends the end (the non reversed beginning) of the thread ID
 
-    sPostID = sSub2[3:-2]
+    sPostID = sSub[indexFirst:indexSecond]
+    sPostID = sPostID[::-1] # Reverse the now grabbed reverse ID
+
+
+
+    sPostID = sPostID[2:-3]
 
     thread = "http://boards.4chan.org/mu/thread/"+ sPostID # We now have the actual sharethread
 
@@ -124,14 +131,6 @@ def GetLinks( thread ):
             if (len(BadLinks) < 1 ):
                 done = True
                 #print done
-
-    i = 0
-    for link in BadLinks:
-        print (i, " bad link second: " + link)
-        i = i + 1
-    for link in GoodLinks:
-        print "good link: " + link
-
 
     # Page is a string in some encoding.
     # In Python 2, we can print it without knowing what the encoding is.
