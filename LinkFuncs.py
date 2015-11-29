@@ -3,19 +3,30 @@ import urllib2
 import requests
 from StringIO import StringIO
 
+def testURL(url):
+    try:
+        r = requests.head(url)
+        return r.status_code
+    except requests.ConnectionError:
+        return 404
 
-
-def GetThread():
-
+def GetHTML(url):
     buffer = StringIO()
     c = pycurl.Curl()
-    sSearch = "sharethread"
-    c.setopt(c.URL, 'http://boards.4chan.org/mu/catalog')
+    c.setopt(c.URL, url)
     c.setopt(c.WRITEDATA, buffer)
     c.perform()
     c.close()
 
     page = buffer.getvalue()
+
+    return page
+
+def GetThread():
+
+    sSearch = "sharethread"
+    sSearch2 = "share-thread"
+    page = GetHTML( 'http://boards.4chan.org/mu/catalog')
     # Now that we have the contents of the page, we need to find the current sharethread
     # Or decide that there is none currently
 
@@ -23,6 +34,10 @@ def GetThread():
     if  sSearch in page:
         bShare = True
         index = page.find(sSearch, 0, len(page))
+    elif sSearch2 in page:
+        bShare = True
+        index = page.find(sSearch2)
+        sSearch = sSearch2
     else:
         print( "ERROR: No sharethread found. Try later today?")
 
@@ -47,26 +62,16 @@ def GetThread():
 
     thread = "http://boards.4chan.org/mu/thread/"+ sPostID # We now have the actual sharethread
 
-
-    try:
-        r = requests.head("http://stackoverflow.com")
-        print(r.status_code)
-    except requests.ConnectionError:
-        print("No sharethread or wrong ID")
-        thread = 404
+    if testURL(thread) == '404':
+        print 'sharethread 404, something went wrong'
+        return '404'
 
     return thread
 
 
 def GetLinks( thread ):
 
-    buffer = StringIO()
-    c2 = pycurl.Curl()
-    c2.setopt(c2.URL, thread)
-    c2.setopt(c2.WRITEDATA, buffer)
-    c2.perform()
-    c2.close()
-    page = buffer.getvalue()
+    page = GetHTML(thread)
 
     # We have the HTML of the sharethread itself
     # So we need to iterate through it until we find every mega.nz link
